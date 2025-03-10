@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <AssemblyName>SMBLibrary.Client.Extension.FluentConnect</AssemblyName>
+    <Version>1.5.4</Version>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Authors>lazyzu</Authors>
+    <PackageDescription>Wrapper library of SMBLibrary for manage client more fluent</PackageDescription>
+    <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>TODO</PackageProjectUrl>
+    <RepositoryUrl>TODO</RepositoryUrl>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SMBLibrary" Version="1.5.4" />
+  </ItemGroup>
+
+</Project>
