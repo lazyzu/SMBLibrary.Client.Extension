@@ -3,19 +3,25 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssemblyName>SMBLibrary.Client.Extension.FluentConnect</AssemblyName>
-    <Version>1.5.4</Version>
+    <Version>0.5.4</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Authors>lazyzu</Authors>
-    <PackageDescription>Wrapper library of SMBLibrary for manage client more fluent</PackageDescription>
-    <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
-    <PackageProjectUrl>TODO</PackageProjectUrl>
-    <RepositoryUrl>TODO</RepositoryUrl>
-    <PackageReadmeFile>Readme.md</PackageReadmeFile>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageDescription>Wrapper library of SMBLibrary for access SMB resource easier</PackageDescription>
+    <PackageProjectUrl>https://github.com/lazyzu/SMBLibrary.Client.Extension</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/lazyzu/SMBLibrary.Client.Extension</RepositoryUrl>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  
+  
   <ItemGroup>
     <PackageReference Include="SMBLibrary" Version="1.5.4" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
   </ItemGroup>
 
 </Project>
