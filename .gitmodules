@@ -1,0 +1,3 @@
+[submodule "SMBLibrary"]
+	path = SMBLibrary
+	url = https://github.com/TalAloni/SMBLibrary.git
