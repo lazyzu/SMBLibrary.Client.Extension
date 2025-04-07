@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SMBLibrary.Client.Extension
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SMBLibrary.Client.Extension.AsyncImpl.FluentConnect", "SMBLibrary.Client.Extension.AsyncImpl.FluentConnect\SMBLibrary.Client.Extension.AsyncImpl.FluentConnect.csproj", "{AF6EB55D-6911-BC79-A70A-FE128FF7B262}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SMBLibrary.Client.Extension.AsyncImpl.FluentConnect.Playground", "SMBLibrary.Client.Extension.AsyncImpl.FluentConnect.Playground\SMBLibrary.Client.Extension.AsyncImpl.FluentConnect.Playground.csproj", "{DE1BD050-3A9C-DFC7-8ABD-C1B8A687C8AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{AF6EB55D-6911-BC79-A70A-FE128FF7B262}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF6EB55D-6911-BC79-A70A-FE128FF7B262}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF6EB55D-6911-BC79-A70A-FE128FF7B262}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE1BD050-3A9C-DFC7-8ABD-C1B8A687C8AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE1BD050-3A9C-DFC7-8ABD-C1B8A687C8AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE1BD050-3A9C-DFC7-8ABD-C1B8A687C8AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE1BD050-3A9C-DFC7-8ABD-C1B8A687C8AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
