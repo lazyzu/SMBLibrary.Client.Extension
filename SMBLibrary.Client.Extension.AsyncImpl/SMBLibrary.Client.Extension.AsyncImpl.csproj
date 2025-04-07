@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net46;netstandard2.0;net5.0;net6.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>SMBLibrary.Client.Extension.AsyncImpl</AssemblyName>
+    <Version>0.5.4</Version>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Authors>lazyzu</Authors>
+    <PackageDescription>async version of the SMBLibrary client functions</PackageDescription>
+    <PackageProjectUrl>https://github.com/lazyzu/SMBLibrary.Client.Extension</PackageProjectUrl>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+
+    <!-- Sourcelink: https://github.com/dotnet/sourcelink/ -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="SMBLibrary" Version="1.5.4" />
+    <Compile Include="..\SMBLibrary\SMBLibrary\SMB2\SMB2Cryptography.cs" Link="SMBLibrary\SMB2\SMB2Cryptography.cs" />
+    <Compile Include="..\SMBLibrary\SMBLibrary\Helpers\SP800_1008.cs" Link="SMBLibrary\Helpers\SP800_1008.cs" />
+
+    <Compile Update="SMB1AsyncClient.SocketHandle.cs">
+      <DependentUpon>SMB1AsyncClient.cs</DependentUpon>
+    </Compile>
+
+    <Compile Update="SMB2AsyncClient.SocketHandle.cs">
+      <DependentUpon>SMB2AsyncClient.cs</DependentUpon>
+    </Compile>
+
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework) == 'net5.0' OR $(TargetFramework) == 'net6.0'" >
+	  <Using Include="Utilities.AesCcm" Alias="AesCcm"/>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)'=='Release'">
+    <None Include="readme.md" Pack="true" PackagePath="\" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>
