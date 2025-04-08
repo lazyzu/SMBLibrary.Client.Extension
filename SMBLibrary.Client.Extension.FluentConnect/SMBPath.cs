@@ -28,7 +28,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
 
                 foreach (var part in parts)
                 {
-                    if (".".Equals(part)) path = path;
+                    if (".".Equals(part)) { /*path = path;*/ }
                     else if ("..".Equals(part))
                     {
                         var lastSeparatorIndex = path.LastIndexOf('\\');

@@ -8,21 +8,24 @@ namespace SMBLibrary.Client.Extension.FluentConnect
 {
     public class SMBFile
     {
-        internal ISMBClient client;
+        private protected readonly ISMBClient client;
+        private protected readonly SMBTransaction transaction;
 
-        public SMBFile(ISMBClient client)
+        public SMBFile(ISMBClient client, SMBTransaction transaction)
         {
-            if (client == null) throw new ArgumentNullException("client");
+            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (transaction == null) throw new ArgumentException(nameof(transaction));
 
             this.client = client;
+            this.transaction = transaction;
         }
 
-        public void CreateFile(SMBPath path, Stream stream)
+        public virtual void CreateFile(SMBPath path, Stream stream)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 
-            var directoryHandle = new SMBDirectory(client);
+            var directoryHandle = new SMBDirectory(client, transaction);
             var (parentDirectoryParsed, parentDirectory, _) = path.GetRelative("..");
             if (parentDirectory != null && (directoryHandle.Exists(parentDirectory) == false))
             {
@@ -72,7 +75,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             var fileStoreDisconnectStatus = fileStore.Disconnect();
         }
 
-        public void CreateFile(SMBPath path, string content)
+        public virtual void CreateFile(SMBPath path, string content)
         {
             using (var stream = new MemoryStream())
             using (var writer = new StreamWriter(stream))
@@ -85,7 +88,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public void CreateFile(SMBPath path, byte[] content)
+        public virtual void CreateFile(SMBPath path, byte[] content)
         {
             using (var stream = new MemoryStream(content))
             {
@@ -94,7 +97,12 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public void DeleteFile(SMBPath path)
+        public virtual SMBFileStream Open(SMBPath path
+            , SMBLibrary.CreateDisposition mode, SMBLibrary.AccessMask access, SMBLibrary.ShareAccess share
+            , bool leaveConnectionOpenWhenDispose = true)
+            => SMBFileStream.CreateFrom(path, transaction, mode, access, share, leaveConnectionOpenWhenDispose);
+
+        public virtual void DeleteFile(SMBPath path)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             else
@@ -149,7 +157,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public void Move(SMBPath from, SMBPath to)
+        public virtual void Move(SMBPath from, SMBPath to)
         {
             if (from == null) throw new ArgumentNullException(nameof(from));
             if (to == null) throw new ArgumentNullException(nameof(to));
@@ -178,7 +186,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
                     var fileConnectStatus = fileStore.CreateFile(out var fileHandle
                         , out var fileConnectFileStatus
                         , targetFolder
-                        , SMBLibrary.AccessMask.GENERIC_WRITE | SMBLibrary.AccessMask.SYNCHRONIZE
+                        , SMBLibrary.AccessMask.GENERIC_WRITE | SMBLibrary.AccessMask.DELETE | SMBLibrary.AccessMask.SYNCHRONIZE
                         , SMBLibrary.FileAttributes.Normal
                         , SMBLibrary.ShareAccess.None
                         , SMBLibrary.CreateDisposition.FILE_OPEN
@@ -192,7 +200,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
                     }
                     else
                     {
-                        var directoryHnadle = new SMBDirectory(this.client);
+                        var directoryHnadle = new SMBDirectory(this.client, this.transaction);
                         var (toParentPathParsed, toParentPath, _) = to.GetRelative("..");
                         directoryHnadle.CreateDirectory(toParentPath);
 
@@ -228,30 +236,30 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public bool Exists(SMBPath path)
+        public virtual bool Exists(SMBPath path)
         {
             try
             {
-                DoSomethingAfterFileConnect(path, null, out var isFileConnected);
+                DoSomethingAfterFileConnect(path, client, action: null, out var isFileConnected);
                 return isFileConnected;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
         }
 
-        public FileInformation GetInfo(SMBPath path)
+        public virtual FileInformation GetInfo(SMBPath path)
         {
-            return DoSomethingAfterFileConnect(path, func: (fileStore, fileHandle) =>
+            return DoSomethingAfterFileConnect(path, client, func: (fileStore, fileHandle) =>
             {
-                var basicInfo = getInfo<FileBasicInformation>(path, fileStore, fileHandle, SMBLibrary.FileInformationClass.FileBasicInformation);
-                var stdInfo = getInfo<FileStandardInformation>(path, fileStore, fileHandle, SMBLibrary.FileInformationClass.FileStandardInformation);
+                var basicInfo = GetInfo<FileBasicInformation>(path, fileStore, fileHandle, SMBLibrary.FileInformationClass.FileBasicInformation);
+                var stdInfo = GetInfo<FileStandardInformation>(path, fileStore, fileHandle, SMBLibrary.FileInformationClass.FileStandardInformation);
                 return FileInformation.ParseFrom(basicInfo, stdInfo);
             }, out var isFileConnected);
         }
 
-        public void SetInfo(SMBPath path, Action<SetInfoModel> infoSetter)
+        public virtual void SetInfo(SMBPath path, Action<SetInfoModel> infoSetter)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (infoSetter == null) throw new ArgumentNullException(nameof(infoSetter));
@@ -274,7 +282,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
 
             if (fileConnectStatus == NTStatus.STATUS_SUCCESS)
             {
-                var basicInfo = getInfo<FileBasicInformation>(path, fileStore, fileHandle, SMBLibrary.FileInformationClass.FileBasicInformation);
+                var basicInfo = GetInfo<FileBasicInformation>(path, fileStore, fileHandle, SMBLibrary.FileInformationClass.FileBasicInformation);
                 var setInfoModel = SetInfoModel.ParseFrom(basicInfo);
                 infoSetter(setInfoModel);
                 var renderedBasicInfo = setInfoModel.RenderBack(basicInfo);
@@ -289,7 +297,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             var fileStoreDisconnectStatus = fileStore.Disconnect();
         }
 
-        private T getInfo<T>(SMBPath path, ISMBFileStore fileStore, object fileHandle, SMBLibrary.FileInformationClass queryInfoClass) where T : SMBLibrary.FileInformation
+        internal static T GetInfo<T>(SMBPath path, ISMBFileStore fileStore, object fileHandle, SMBLibrary.FileInformationClass queryInfoClass) where T : SMBLibrary.FileInformation
         {
             var getFileInformationStatus = fileStore.GetFileInformation(out var fileInformation, fileHandle, queryInfoClass);
             if (getFileInformationStatus != NTStatus.STATUS_SUCCESS) throw new AccessViolationException($"Not able to get {queryInfoClass} of file {path}, error:{getFileInformationStatus}");
@@ -309,7 +317,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             return result;
         }
 
-        public void OpenRead(Stream stream, SMBPath path, long offset = 0, long? length = null)
+        public virtual void OpenRead(Stream stream, SMBPath path, long offset = 0, long? length = null)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             else
@@ -384,7 +392,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public byte[] ReadAllBytes(SMBPath path, int offset = 0, long? length = null)
+        public virtual byte[] ReadAllBytes(SMBPath path, int offset = 0, long? length = null)
         {
             using (var stream = OpenRead(path, offset, length))
             {
@@ -393,7 +401,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public string ReadAllText(SMBPath path, int offset = 0, long? length = null)
+        public virtual string ReadAllText(SMBPath path, int offset = 0, long? length = null)
         {
             using (var stream = OpenRead(path, offset, length))
             using (var streamReader = new StreamReader(stream))
@@ -402,7 +410,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public IEnumerable<string> ReadAllLines(SMBPath path, int offset = 0, long? length = null)
+        public virtual IEnumerable<string> ReadAllLines(SMBPath path, int offset = 0, long? length = null)
         {
             using (var stream = OpenRead(path, offset, length))
             using (var streamReader = new StreamReader(stream))
@@ -414,12 +422,12 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        private void DoSomethingAfterFileConnect(SMBPath path, Action<ISMBFileStore, object> action, out bool isFileConnected)
+        internal static void DoSomethingAfterFileConnect(SMBPath path, ISMBClient client, Action<ISMBFileStore, object> action, out bool isFileConnected)
         {
-            DoSomethingAfterFileConnect<object>(path, func: null, out isFileConnected);
+            DoSomethingAfterFileConnect<object>(path, client, func: null, out isFileConnected);
         }
 
-        private T DoSomethingAfterFileConnect<T>(SMBPath path, Func<ISMBFileStore, object, T> func, out bool isFileConnected)
+        internal static T DoSomethingAfterFileConnect<T>(SMBPath path, ISMBClient client, Func<ISMBFileStore, object, T> func, out bool isFileConnected)
         {
             if (path == null)
             {
@@ -471,8 +479,6 @@ namespace SMBLibrary.Client.Extension.FluentConnect
                 }
             }
         }
-
-        // TODO: Curently not support to modify file yet
 
         public class FileInformation
         {

@@ -20,7 +20,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
         private readonly string password;
         public string Password => password;
 
-        private SMBCredientail(string userName, string password, string domainNmae = null)
+        private SMBCredientail(string userName, string password, string domainName = null)
         {
             this.userName = userName?.Trim();
             this.password = password?.Trim();

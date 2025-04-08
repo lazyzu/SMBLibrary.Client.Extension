@@ -8,16 +8,19 @@ namespace SMBLibrary.Client.Extension.FluentConnect
 {
     public class SMBDirectory
     {
-        private ISMBClient client;
+        private protected readonly ISMBClient client;
+        private protected readonly SMBTransaction transaction;
 
-        public SMBDirectory(ISMBClient client)
+        public SMBDirectory(ISMBClient client, SMBTransaction transaction)
         {
-            if(client == null) throw new ArgumentNullException("client");
+            if(client == null) throw new ArgumentNullException(nameof(client));
+            if (transaction == null) throw new ArgumentException(nameof(transaction));
 
             this.client = client;
+            this.transaction = transaction;
         }
 
-        public void CreateDirectory(SMBPath path)
+        public virtual void CreateDirectory(SMBPath path)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
 
@@ -66,7 +69,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public void DeleteDirectory(SMBPath path, bool deleteSubItems = false)
+        public virtual void DeleteDirectory(SMBPath path, bool deleteSubItems = false)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             else
@@ -80,7 +83,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
                             DeleteDirectory(subDirectory.SMBPath, deleteSubItems: true);
                         }
 
-                        var fileHandle = new SMBFile(this.client);
+                        var fileHandle = new SMBFile(this.client, this.transaction);
                         foreach (var subFile in GetFiles(path)) fileHandle.DeleteFile(subFile.SMBPath);
                     }
 
@@ -131,7 +134,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public void Move(SMBPath from, SMBPath to)
+        public virtual void Move(SMBPath from, SMBPath to)
         {
             if (from == null) throw new ArgumentNullException(nameof(from));
             if (to == null) throw new ArgumentNullException(nameof(to));
@@ -160,7 +163,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
                     var directoryConnectStatus = fileStore.CreateFile(out var directoryHandle
                         , out var directoryConnectFileStatus
                         , targetFolder
-                        , SMBLibrary.AccessMask.GENERIC_WRITE | SMBLibrary.AccessMask.SYNCHRONIZE
+                        , SMBLibrary.AccessMask.GENERIC_WRITE | SMBLibrary.AccessMask.DELETE | SMBLibrary.AccessMask.SYNCHRONIZE
                         , SMBLibrary.FileAttributes.Normal
                         , SMBLibrary.ShareAccess.None
                         , SMBLibrary.CreateDisposition.FILE_OPEN
@@ -209,7 +212,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public bool Exists(SMBPath path)
+        public virtual bool Exists(SMBPath path)
         {
             try
             {
@@ -222,7 +225,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public DirectoryInformation GetInfo(SMBPath path)
+        public virtual DirectoryInformation GetInfo(SMBPath path)
         {
             return DoSomethingAfterDirectoryConnect(path, func: (fileStore, directoryHandle) =>
             {
@@ -237,7 +240,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }, out var isDirectoryConnected);
         }
 
-        public IEnumerable<FileDirectoryInformation> GetFiles(SMBPath path, string searchPattern = "*", SearchOption searchOption = SearchOption.TopDirectoryOnly)
+        public virtual IEnumerable<FileDirectoryInformation> GetFiles(SMBPath path, string searchPattern = "*", SearchOption searchOption = SearchOption.TopDirectoryOnly)
         {
             switch (searchOption)
             {
@@ -250,7 +253,7 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public IEnumerable<FileDirectoryInformation> GetDirectories(SMBPath path, string searchPattern = "*", SearchOption searchOption = SearchOption.TopDirectoryOnly)
+        public virtual IEnumerable<FileDirectoryInformation> GetDirectories(SMBPath path, string searchPattern = "*", SearchOption searchOption = SearchOption.TopDirectoryOnly)
         {
             switch (searchOption)
             {

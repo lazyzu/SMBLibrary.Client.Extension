@@ -12,93 +12,128 @@ namespace SMBLibrary.Client.Extension.FluentConnect
         private bool hasLogin;
         private bool disposedValue;
 
-        public static TSMBTransaction NewTransaction<TSMBTransaction>(IPAddress serverAddress, Action<TSMBTransaction> afterConnectInitial, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        public static TSMBTransaction NewTransaction<TSMBTransaction>(IPAddress serverAddress
+            , Action<TSMBTransaction> afterConnectInitial
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
             where TSMBTransaction : SMBTransaction, new()
         {
             var transaction = new TSMBTransaction();
-            transaction.ConnectOnlyInitial(serverAddress, testClientTypes);
+            transaction.ConnectOnlyInitial(serverAddress, testClientTypes, transportTypeSelection);
             afterConnectInitial(transaction);
             return transaction;
         }
 
-        public static TSMBTransaction NewTransaction<TSMBTransaction>(IPAddress serverAddress, Action<TSMBTransaction> afterConnectInitial, string username, string password, string domainName = null, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        public static TSMBTransaction NewTransaction<TSMBTransaction>(IPAddress serverAddress
+            , Action<TSMBTransaction> afterConnectInitial
+            , string username, string password, string domainName = null
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
             where TSMBTransaction : SMBTransaction, new()
         {
             var transaction = new TSMBTransaction();
-            transaction.ConnectAndLoginInitial(serverAddress, username, password, domainName, testClientTypes);
+            transaction.ConnectAndLoginInitial(serverAddress, username, password, domainName, testClientTypes, transportTypeSelection);
             afterConnectInitial(transaction);
             return transaction;
         }
 
-        public static TSMBTransaction NewTransaction<TSMBTransaction>(IPAddress serverAddress, Action<TSMBTransaction> afterConnectInitial, ISMBCredientail credientail, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        public static TSMBTransaction NewTransaction<TSMBTransaction>(IPAddress serverAddress
+            , Action<TSMBTransaction> afterConnectInitial
+            , ISMBCredientail credientail
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
             where TSMBTransaction : SMBTransaction, new()
         {
             var transaction = new TSMBTransaction();
             if (credientail == null) transaction.ConnectOnlyInitial(serverAddress, testClientTypes);
-            else transaction.ConnectAndLoginInitial(serverAddress, credientail.UserName, credientail.Password, credientail.DomainName, testClientTypes);
+            else transaction.ConnectAndLoginInitial(serverAddress, credientail.UserName, credientail.Password, credientail.DomainName, testClientTypes, transportTypeSelection);
             afterConnectInitial(transaction);
             return transaction;
         }
 
-        public static TSMBTransaction NewTransaction<TSMBTransaction>(string serverName, Action<TSMBTransaction> afterConnectInitial, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        public static TSMBTransaction NewTransaction<TSMBTransaction>(string serverName
+            , Action<TSMBTransaction> afterConnectInitial
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
             where TSMBTransaction : SMBTransaction, new()
         {
             var (isSuccess, serverAddress, error) = SMBClientFactory.LoadServerAddress(serverName);
-            if (isSuccess) return SMBTransaction.NewTransaction<TSMBTransaction>(serverAddress, afterConnectInitial, testClientTypes);
+            if (isSuccess) return SMBTransaction.NewTransaction<TSMBTransaction>(serverAddress, afterConnectInitial, testClientTypes, transportTypeSelection);
             else throw error;
         }
 
-        public static TSMBTransaction NewTransaction<TSMBTransaction>(string serverName, Action<TSMBTransaction> afterConnectInitial, string username, string password, string domainName = null, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        public static TSMBTransaction NewTransaction<TSMBTransaction>(string serverName
+            , Action<TSMBTransaction> afterConnectInitial
+            , string username, string password, string domainName = null
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
             where TSMBTransaction : SMBTransaction, new()
         {
             var (isSuccess, serverAddress, error) = SMBClientFactory.LoadServerAddress(serverName);
-            if (isSuccess) return SMBTransaction.NewTransaction<TSMBTransaction>(serverAddress, afterConnectInitial, username, password, domainName, testClientTypes);
+            if (isSuccess) return SMBTransaction.NewTransaction<TSMBTransaction>(serverAddress, afterConnectInitial, username, password, domainName, testClientTypes, transportTypeSelection);
             else throw error;
         }
 
-        public static TSMBTransaction NewTransaction<TSMBTransaction>(string serverName, Action<TSMBTransaction> afterConnectInitial, ISMBCredientail credientail, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        public static TSMBTransaction NewTransaction<TSMBTransaction>(string serverName
+            , Action<TSMBTransaction> afterConnectInitial
+            , ISMBCredientail credientail
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
             where TSMBTransaction : SMBTransaction, new()
         {
             var (isSuccess, serverAddress, error) = SMBClientFactory.LoadServerAddress(serverName);
-            if (isSuccess) return SMBTransaction.NewTransaction<TSMBTransaction>(serverAddress, afterConnectInitial, credientail, testClientTypes);
+            if (isSuccess) return SMBTransaction.NewTransaction<TSMBTransaction>(serverAddress, afterConnectInitial, credientail, testClientTypes, transportTypeSelection);
             else throw error;
         }
 
-        public static TSMBTransaction NewTransaction<TSMBTransaction>(SMBPath path, Action<TSMBTransaction> afterConnectInitial, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        public static TSMBTransaction NewTransaction<TSMBTransaction>(SMBPath path
+            , Action<TSMBTransaction> afterConnectInitial
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
             where TSMBTransaction : SMBTransaction, new()
         {
             if (IPAddress.TryParse(path.HostName, out var hostAddress))
             {
-                return SMBTransaction.NewTransaction<TSMBTransaction>(hostAddress, afterConnectInitial, testClientTypes);
+                return SMBTransaction.NewTransaction<TSMBTransaction>(hostAddress, afterConnectInitial, testClientTypes, transportTypeSelection);
             }
-            else return SMBTransaction.NewTransaction<TSMBTransaction>(path.HostName, afterConnectInitial, testClientTypes);
+            else return SMBTransaction.NewTransaction<TSMBTransaction>(path.HostName, afterConnectInitial, testClientTypes, transportTypeSelection);
         }
 
-        public static TSMBTransaction NewTransaction<TSMBTransaction>(SMBPath path, Action<TSMBTransaction> afterConnectInitial, string username, string password, string domainName = null, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        public static TSMBTransaction NewTransaction<TSMBTransaction>(SMBPath path
+            , Action<TSMBTransaction> afterConnectInitial
+            , string username, string password, string domainName = null
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
             where TSMBTransaction : SMBTransaction, new()
         {
             if (IPAddress.TryParse(path.HostName, out var hostAddress))
             {
-                return SMBTransaction.NewTransaction<TSMBTransaction>(hostAddress, afterConnectInitial, username, password, domainName, testClientTypes);
+                return SMBTransaction.NewTransaction<TSMBTransaction>(hostAddress, afterConnectInitial, username, password, domainName, testClientTypes, transportTypeSelection);
             }
-            else return SMBTransaction.NewTransaction<TSMBTransaction>(path.HostName, afterConnectInitial, username, password, domainName, testClientTypes);
+            else return SMBTransaction.NewTransaction<TSMBTransaction>(path.HostName, afterConnectInitial, username, password, domainName, testClientTypes, transportTypeSelection);
         }
 
-        public static TSMBTransaction NewTransaction<TSMBTransaction>(SMBPath path, Action<TSMBTransaction> afterConnectInitial, ISMBCredientail credientail, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        public static TSMBTransaction NewTransaction<TSMBTransaction>(SMBPath path
+            , Action<TSMBTransaction> afterConnectInitial
+            , ISMBCredientail credientail
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
             where TSMBTransaction : SMBTransaction, new()
         {
             if (IPAddress.TryParse(path.HostName, out var hostAddress))
             {
-                return SMBTransaction.NewTransaction<TSMBTransaction>(hostAddress, afterConnectInitial, credientail, testClientTypes);
+                return SMBTransaction.NewTransaction<TSMBTransaction>(hostAddress, afterConnectInitial, credientail, testClientTypes, transportTypeSelection);
             }
-            else return SMBTransaction.NewTransaction<TSMBTransaction>(path.HostName, afterConnectInitial, credientail, testClientTypes);
+            else return SMBTransaction.NewTransaction<TSMBTransaction>(path.HostName, afterConnectInitial, credientail, testClientTypes, transportTypeSelection);
         }
 
-        protected virtual void ConnectOnlyInitial(IPAddress serverAddress, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        protected virtual void ConnectOnlyInitial(IPAddress serverAddress
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
         {
             if (serverAddress == null) throw new ArgumentNullException(nameof(serverAddress));
 
-            var (isConnectionSuccess, connectionInfo, error) = SMBClientFactory.TryConnectWithAddress(serverAddress, testClientTypes);
+            var (isConnectionSuccess, connectionInfo, error) = SMBClientFactory.TryConnectWithAddress(serverAddress, testClientTypes, transportTypeSelection);
             if (isConnectionSuccess)
             {
                 this.Client = connectionInfo.SMBClient;
@@ -107,11 +142,14 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             else throw error;
         }
 
-        protected virtual void ConnectAndLoginInitial(IPAddress serverAddress, string username, string password, string domainName, SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All)
+        protected virtual void ConnectAndLoginInitial(IPAddress serverAddress
+            , string username, string password, string domainName
+            , SMBClientFactory.TestClientSelection testClientTypes = SMBClientFactory.TestClientSelection.All
+            , SMBClientFactory.SMBTransportTypeSelection transportTypeSelection = SMBClientFactory.SMBTransportTypeSelection.All)
         {
             if (serverAddress == null) throw new ArgumentNullException(nameof(serverAddress));
 
-            var (isConnectionSuccess, connectionInfo, error) = SMBClientFactory.TryConnectWithAddress(serverAddress, testClientTypes);
+            var (isConnectionSuccess, connectionInfo, error) = SMBClientFactory.TryConnectWithAddress(serverAddress, testClientTypes, transportTypeSelection);
             if (isConnectionSuccess)
             {
                 var loginStatus = connectionInfo.SMBClient.Login(domainName ?? String.Empty, username, password);
@@ -165,8 +203,8 @@ namespace SMBLibrary.Client.Extension.FluentConnect
 
         public void InitialHandles()
         {
-            this.FileHandle = new SMBFile(this.Client);
-            this.FolderHandle = new SMBDirectory(this.Client);
+            this.FileHandle = new SMBFile(this.Client, this);
+            this.FolderHandle = new SMBDirectory(this.Client, this);
         }
     }
 }

@@ -11,9 +11,19 @@ namespace SMBLibrary.Client.Extension.FluentConnect
         [Flags]
         public enum TestClientSelection
         {
+            None,
             SMB1Client,
             SMB2Client,
             All = SMB1Client | SMB2Client
+        }
+
+        [Flags]
+        public enum SMBTransportTypeSelection
+        {
+            None,
+            NetBiosOverTCP,
+            DirectTCPTransport,
+            All = NetBiosOverTCP | DirectTCPTransport
         }
 
         public class ConnectionInfo
@@ -101,10 +111,12 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             }
         }
 
-        public static Result<ConnectionInfo, Exception> TryConnectWithServerName(string serverName, TestClientSelection testClientTypes = TestClientSelection.All)
+        public static Result<ConnectionInfo, Exception> TryConnectWithServerName(string serverName
+            , TestClientSelection testClientTypes = TestClientSelection.All
+            , SMBTransportTypeSelection transportTypeSelection = SMBTransportTypeSelection.All)
         {
             var (isSuccess, serverAddress, error) = LoadServerAddress(serverName);
-            if (isSuccess) return TryConnectWithAddress(serverAddress, testClientTypes);
+            if (isSuccess) return TryConnectWithAddress(serverAddress, testClientTypes, transportTypeSelection);
             else return error;
         }
 
@@ -120,13 +132,16 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             return serverAddress;
         }
 
-        public static Result<ConnectionInfo, Exception> TryConnectWithAddress(IPAddress serverAddress, TestClientSelection testClientTypes = TestClientSelection.All)
+        public static Result<ConnectionInfo, Exception> TryConnectWithAddress(IPAddress serverAddress
+            , TestClientSelection testClientTypes = TestClientSelection.All
+            , SMBTransportTypeSelection transportTypeSelection = SMBTransportTypeSelection.All)
         {
             var _testConnectClients = getTestClients(testClientTypes);
+            var _testTransportTypes = getTransportType(transportTypeSelection).ToArray();
 
             foreach (var client in _testConnectClients)
             {
-                var isConnected = tryConnectByServerAddress(client, serverAddress, out var transportType);
+                var isConnected = tryConnectByServerAddress(client, serverAddress, _testTransportTypes, out var transportType);
 
                 if (isConnected)
                 {
@@ -137,10 +152,11 @@ namespace SMBLibrary.Client.Extension.FluentConnect
             return new Exception($"Try connect operation is failed with client selection: {testClientTypes} ");
         }
 
-        private static bool tryConnectByServerAddress(ISMBClient client, IPAddress serverAddress, out string transportType)
+        private static bool tryConnectByServerAddress(ISMBClient client
+            , IPAddress serverAddress
+            , SMBTransportType[] testedTransportTypes
+            , out string transportType)
         {
-            var testedTransportTypes = Enum.GetValues(typeof(SMBTransportType)).Cast<SMBTransportType>().OrderByDescending(t => t);
-
             foreach (var testedTransportType in testedTransportTypes)
             {
                 var isConnected = client.Connect(serverAddress, testedTransportType);
@@ -157,8 +173,14 @@ namespace SMBLibrary.Client.Extension.FluentConnect
 
         private static IEnumerable<ISMBClient> getTestClients(TestClientSelection testClientTypes)
         {
-            if (testClientTypes.HasFlag(TestClientSelection.SMB1Client)) yield return new SMB1Client();
             if (testClientTypes.HasFlag(TestClientSelection.SMB2Client)) yield return new SMB2Client();
+            if (testClientTypes.HasFlag(TestClientSelection.SMB1Client)) yield return new SMB1Client();
+        }
+
+        private static IEnumerable<SMBTransportType> getTransportType(SMBTransportTypeSelection transportTypeSelection)
+        {
+            if (transportTypeSelection.HasFlag(SMBTransportTypeSelection.DirectTCPTransport)) yield return SMBTransportType.DirectTCPTransport;
+            if (transportTypeSelection.HasFlag(SMBTransportTypeSelection.NetBiosOverTCP)) yield return SMBTransportType.NetBiosOverTCP;
         }
     }
 }
