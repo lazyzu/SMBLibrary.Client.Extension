@@ -103,12 +103,12 @@ public void SMBFileStream_Usecase()
     if (isPathParsed)
     {
         var connectionSettingGetter = new SMBConnectionSettingGetter();
-
+    
         using (var transaction = connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath, afterConnectInitial: _tran => _tran.InitialHandles()))
         {
-            var workbookDestination = sampleFolderPath.GetRelative("SMBStream.xlsx").Value;
-
-            using (var fileStream = SMBFileStream.CreateFrom(workbookDestination
+            var sampleFilePath = sampleFolderPath.GetRelative("SMBStream.txt").Value;
+    
+            using (var fileStream = SMBFileStream.CreateFrom(sampleFilePath
                 , transaction.Client
                 , SMBLibrary.CreateDisposition.FILE_OVERWRITE_IF
                 , SMBLibrary.AccessMask.GENERIC_READ | AccessMask.GENERIC_WRITE | AccessMask.SYNCHRONIZE
@@ -118,8 +118,8 @@ public void SMBFileStream_Usecase()
                 streamWriter.WriteLine("Hello World");
                 streamWriter.WriteLine("Hello Stream");
             }
-
-            using (var fileStream = SMBFileStream.CreateFrom(workbookDestination
+    
+            using (var fileStream = SMBFileStream.CreateFrom(sampleFilePath
                 , transaction.Client
                 , SMBLibrary.CreateDisposition.FILE_OPEN
                 , SMBLibrary.AccessMask.GENERIC_READ | AccessMask.SYNCHRONIZE

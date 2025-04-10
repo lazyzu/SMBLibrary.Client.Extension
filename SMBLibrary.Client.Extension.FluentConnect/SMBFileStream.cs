@@ -109,10 +109,13 @@ namespace SMBLibrary.Client.Extension.FluentConnect
                 var readFileStatus = shareStore.ReadFile(out var data, fileHandle, position + numBytesReaded, Math.Min(numBytesToRead, blockSize));
                 if (readFileStatus == NTStatus.STATUS_SUCCESS || readFileStatus == NTStatus.STATUS_END_OF_FILE)
                 {
-                    var n = data.Length;
-                    data.CopyTo(buffer, offset + numBytesReaded);
-                    numBytesReaded += n;
-                    numBytesToRead -= n;
+                    var n = data?.Length ?? 0;
+                    if (n > 0)
+                    {
+                        data.CopyTo(buffer, offset + numBytesReaded);
+                        numBytesReaded += n;
+                        numBytesToRead -= n;
+                    }
 
                     if (readFileStatus == NTStatus.STATUS_END_OF_FILE) break;
                     if (n == 0) break;

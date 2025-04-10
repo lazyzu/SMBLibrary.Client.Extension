@@ -86,7 +86,7 @@ namespace SMBLibrary.Client.Extension.AsyncImpl
                     return new ReadFileResponse()
                     {
                         ReplyHeaderStatus = NTStatus.STATUS_SUCCESS,
-                        Data = ((ReadResponse)response).Data
+                        Data = ((ReadResponse)response).Data ?? new byte[0]
                     };
                 }
                 else if (response.Header.Status == NTStatus.STATUS_END_OF_FILE)
