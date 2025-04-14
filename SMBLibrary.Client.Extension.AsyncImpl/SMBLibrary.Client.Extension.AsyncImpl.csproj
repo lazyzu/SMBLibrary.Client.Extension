@@ -4,7 +4,7 @@
     <TargetFrameworks>net46;netstandard2.0;net5.0;net6.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <AssemblyName>SMBLibrary.Client.Extension.AsyncImpl</AssemblyName>
-    <Version>0.5.4</Version>
+    <Version>1.5.4</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Authors>lazyzu</Authors>
     <PackageDescription>async version of the SMBLibrary client functions</PackageDescription>

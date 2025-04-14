@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0;net6.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <AssemblyName>SMBLibrary.Client.Extension.AsyncImpl.FluentConnect</AssemblyName>
-    <Version>0.5.4</Version>
+    <Version>1.5.4</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Authors>lazyzu</Authors>
     <PackageDescription>SMB access interface similar to System.IO based on SMBLibrary.Client.Extension.AsyncImpl</PackageDescription>
