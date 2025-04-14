@@ -1,66 +1,68 @@
-﻿About SMBLibrary.Client.Extension.FluentConnect:
+About SMBLibrary.Client.Extension.AsyncImpl.FluentConnect:
 =================
-`SMBLibrary.Client.Extension.FluentConnect` is a library that encapsulates the Client functionality of [SMBLibrary](https://github.com/TalAloni/SMBLibrary).
+`SMBLibrary.Client.Extension.AsyncImpl.FluentConnect` is a library that encapsulates the Client functionality of SMBLibrary.Client.Extension.AsyncImpl.
 It provides an SMB access interface similar to `System.IO.File`, `Directory`, and `FileStream`.
 It also offers extensions for connection management and path recognition.
 
-Using SMBLibrary.Client.Extension.FluentConnect:
+Using SMBLibrary.Client.Extension.AsyncImpl.FluentConnect:
 =================
 ### Access SMB resources using an interface similar to System.IO
 `SMBFile` and `SMBDirectory` are implemented to mimic `System.IO`. 
 We can access these two objects through `SMBSimpleTransaction.FileHandle/FolderHandle`.
 ```
-public void Access_Like_System_IO()
+public async Task Access_Like_System_IO(CancellationToken cancellationToken)
 {
     var sampleSharePath = SMBPath.ParseFrom(TestSharePath).Value;
     var sampleFolderPath = sampleSharePath.GetRelative(@"smbtest").Value;
 
     var connectionSettingGetter = new SMBConnectionSettingGetter();
 
-    using (var transaction = connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath
-          , afterConnectInitial: _tran => _tran.InitialHandles()))
+    await using (var transaction = await connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath
+    , afterConnectInitial: _tran => _tran.InitialHandles(), cancellationToken: cancellationToken))
     {
         // Create Folder
-        if (transaction.FolderHandle.Exists(sampleFolderPath) == false)
-            transaction.FolderHandle.CreateDirectory(sampleFolderPath);
-
+        if (await transaction.FolderHandle.Exists(sampleFolderPath, cancellationToken) == false)
+        {
+            var createFolderResponse = await transaction.FolderHandle.CreateDirectory(sampleFolderPath, cancellationToken);
+        }
+    
         // Create Files
         var createdFileCount = 100;
         for (int i = 0; i < createdFileCount; i++)
         {
             var _sampleFilePath = sampleFolderPath.GetRelative($"text{i}.txt").Value;
-            transaction.FileHandle.CreateFile(_sampleFilePath, $"test{i}");
+    
+            var createFileResponse = await transaction.FileHandle.CreateFile(_sampleFilePath, $"test{i}", cancellationToken);
         }
-
+    
         //  Load Files in folder
-        var fileInfosInFolder = transaction.FolderHandle.GetFiles(sampleFolderPath
-            , searchOption: SearchOption.TopDirectoryOnly).ToArray();
-
+        var fileInfosInFolder = await transaction.FolderHandle.GetFiles(sampleFolderPath, searchOption: SearchOption.TopDirectoryOnly, cancellationToken: cancellationToken).ToArrayAsync();
+    
         // Rename File 
         var sampleFilePath = sampleFolderPath.GetRelative("text1.txt").Value;
         var movedSampleFilePath = sampleFolderPath.GetRelative(@"\moved\text1.txt").Value;
-        transaction.FileHandle.Move(sampleFilePath, movedSampleFilePath);
-
+        var moveFileResponse = await transaction.FileHandle.Move(sampleFilePath, movedSampleFilePath, cancellationToken);
+    
         // Readout file content 
-        var readFileResponse = transaction.FileHandle.ReadAllText(movedSampleFilePath);
-
+        var readFileResponse = await transaction.FileHandle.ReadAllText(movedSampleFilePath, cancellationToken: cancellationToken);
+    
         // Set File Last Write Time of File
         var targetTime = DateTime.UtcNow.AddDays(-1);
-        transaction.FileHandle.SetInfo(movedSampleFilePath, info =>
+        var setWriteTimeResponse = await transaction.FileHandle.SetInfo(movedSampleFilePath, info =>
         {
             info.LastWriteTimeUtc = targetTime;
-        });
-        var fileInformation = transaction.FileHandle.GetInfo(movedSampleFilePath);
-
+        }, cancellationToken);
+        var readFileInformationResponse = await transaction.FileHandle.GetInfo(movedSampleFilePath, cancellationToken);
+    
         // Load Folder Info
-        var sampleFolderInfo = transaction.FolderHandle.GetInfo(sampleFolderPath);
-
+        var readSampleFolderInfoResponse = await transaction.FolderHandle.GetInfo(sampleFolderPath, cancellationToken);
+    
         // Move Folder
         var movedSampleFolderPath = sampleSharePath.GetRelative(@"other_smbtest").Value;
-        transaction.FolderHandle.Move(sampleFolderPath, movedSampleFolderPath);
-
+        var moveFolderResponse = await transaction.FolderHandle.Move(sampleFolderPath, movedSampleFolderPath, cancellationToken);
+        
         // Delete folder and files in folder
-        transaction.FolderHandle.DeleteDirectory(movedSampleFolderPath, deleteSubItems: true);
+        var deleteFolderResponse = await transaction.FolderHandle.DeleteDirectory(movedSampleFolderPath, deleteSubItems: true, cancellationToken);
     }
 }
 
@@ -93,41 +95,39 @@ class SMBConnectionSettingGetter : ISMBConnectionSettingGetter
 }
 ```
 
-### Access SMB files using a Stream
+### Access SMB files using a `Stream`
 We can access the file stream using `SMBFile.Open` or `SMBFileStream.CreateFrom`.
 ```
-public void SMBFileStream_Usecase()
+public async Task SMBFileStream_Usecase(CancellationToken cancellationToken)
 {
     var (isPathParsed, sampleFolderPath, _) = SMBPath.ParseFrom(TestSharePath);
 
     if (isPathParsed)
     {
         var connectionSettingGetter = new SMBConnectionSettingGetter();
-    
-        using (var transaction = connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath, afterConnectInitial: _tran => _tran.InitialHandles()))
+
+        await using (var transaction = await connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath, afterConnectInitial: _tran => _tran.InitialHandles(), cancellationToken))
         {
             var sampleFilePath = sampleFolderPath.GetRelative("SMBStream.txt").Value;
-    
-            using (var fileStream = SMBFileStream.CreateFrom(sampleFilePath
-                , transaction.Client
+
+            await using (var fileStream = (await transaction.FileHandle.Open(sampleFilePath
                 , SMBLibrary.CreateDisposition.FILE_OVERWRITE_IF
-                , SMBLibrary.AccessMask.GENERIC_READ | AccessMask.GENERIC_WRITE | AccessMask.SYNCHRONIZE
-                , ShareAccess.None))
+                , SMBLibrary.AccessMask.GENERIC_READ | SMBLibrary.AccessMask.GENERIC_WRITE | SMBLibrary.AccessMask.SYNCHRONIZE
+                , SMBLibrary.ShareAccess.None)).Value)
             using (var streamWriter = new StreamWriter(fileStream))
             {
                 streamWriter.WriteLine("Hello World");
                 streamWriter.WriteLine("Hello Stream");
             }
-    
-            using (var fileStream = SMBFileStream.CreateFrom(sampleFilePath
-                , transaction.Client
+
+            await using (var fileStream = (await transaction.FileHandle.Open(sampleFilePath
                 , SMBLibrary.CreateDisposition.FILE_OPEN
-                , SMBLibrary.AccessMask.GENERIC_READ | AccessMask.SYNCHRONIZE
-                , ShareAccess.None))
+                , SMBLibrary.AccessMask.GENERIC_READ | SMBLibrary.AccessMask.SYNCHRONIZE
+                , SMBLibrary.ShareAccess.None)).Value)
             using (var streamReader = new StreamReader(fileStream))
             {
-                var helloWorldStr = streamReader.ReadLine();
-                var helloStreamStr = streamReader.ReadLine();
+                await Assert.That(streamReader.ReadLine()).IsEqualTo("Hello World");
+                await Assert.That(streamReader.ReadLine()).IsEqualTo("Hello Stream");
             }
         }
     }
@@ -137,19 +137,22 @@ public void SMBFileStream_Usecase()
 `SMBFileStream` does not close the underlying connection by default when disposed.
 If you need to close the connection when disposing, you can set `leaveConnectionOpenWhenDispose` to `false`.
  ```
- public Stream LoadSMBFileStream()
+ public async Task<Stream> LoadSMBFileStream(CancellationToken cancellationToken)
  {
-     var sampleFolderPath = SMBPath.ParseFrom(TestSharePath).Value;
-     var sampleFileDestination = sampleFolderPath.GetRelative("SMBStream.xlsx").Value;
+    var sampleFolderPath = SMBPath.ParseFrom(TestSharePath).Value;
+    var sampleFileDestination = sampleFolderPath.GetRelative("SMBStream.xlsx").Value;
 
-     var connectionSettingGetter = new SMBConnectionSettingGetter();
-     var transaction = connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath, afterConnectInitial: _tran => _tran.InitialHandles());
-     return SMBFileStream.CreateFrom(sampleFileDestination
-             , transaction.Client
-             , SMBLibrary.CreateDisposition.FILE_OVERWRITE_IF
-             , SMBLibrary.AccessMask.GENERIC_READ | AccessMask.GENERIC_WRITE | AccessMask.SYNCHRONIZE
-             , ShareAccess.None
-             , leaveConnectionOpenWhenDispose: false);
+    var connectionSettingGetter = new SMBConnectionSettingGetter();
+    var transaction = await connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath, afterConnectInitial: _tran => _tran.InitialHandles());
+    var createStreamResponse = await SMBFileStream.CreateFrom(sampleFileDestination
+            , transaction.Client
+            , SMBLibrary.CreateDisposition.FILE_OVERWRITE_IF
+            , SMBLibrary.AccessMask.GENERIC_READ | AccessMask.GENERIC_WRITE | AccessMask.SYNCHRONIZE
+            , ShareAccess.None
+            , leaveConnectionOpenWhenDispose: false);
+
+    if (createStreamResponse.IsSuccess) return createStreamResponse.Value;
+    else throw createStreamResponse.Error;
  }
  ```
 
@@ -182,14 +185,14 @@ class SMBConnectionSettingGetter : ISMBConnectionSettingGetter
  We can manage the client state using `SMBTransaction`. 
  When dispose occurs, it will automatically execute disconnect and logout (if login credential was provided when creating the Transaction).
 ```
-public void Transaction_Usecase()
+public async Task Transaction_Usecase()
 {
     var sampleSharePath = SMBPath.ParseFrom(TestSharePath).Value;
     var sampleFolderPath = sampleSharePath.GetRelative(@"smbtest").Value;
 
     var connectionSettingGetter = new SMBConnectionSettingGetter();
 
-    using (var transaction = connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath
+    await using (var transaction = await connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath
           , afterConnectInitial: _tran => _tran.InitialHandles()))
     {
         // Operations
@@ -222,17 +225,22 @@ var (isParsed, samplePath, parsedError) = SMBPath.ParseFrom(@"\\127.0.0.1\share\
 
 `SMBClientFactory` is responsible for attempting to connect to unknown SMB resources (You can specify the list of clients implemented by SMBLibrary.) and return the connection information containing Client, Dialect, and TransportType.
 ```
-public void SMBClientFactory_TryConnect()
+public async Task SMBClientFactory_TryConnect()
 {
-    var (isSuccess, connectionInfo, error) = SMBClientFactory.TryConnectWithServerName("ServerName");
-    //var (isSuccess, connectionInfo, error) = SMBClientFactory.TryConnectWithAddress(IPAddress.Parse("..."));
+    var connectResponse = await SMBClientFactory.TryConnectWithServerName("ServerName");
+    //var connectResponse = await SMBClientFactory.TryConnectWithAddress(IPAddress.Parse("..."));
 
-    if (isSuccess)
+    if (connectResponse.IsSuccess)
     {
+        var connectionInfo = connectResponse.Value;
         var client = connectionInfo.SMBClient;
         var dialect = connectionInfo.Dialect;
         var transportType = connectionInfo.TransportType;
     }
-    else Assert.Fail(error.Message);
+    else throw connectResponse.Error;
 }
 ```
+
+Licensing:
+=================
+`SMBLibrary.Client.Extension.AsyncImpl.FluentConnect` can be used in any scenario without any cost. However, please note the [commercial usage restrictions of the underlying SMBLibrary](https://github.com/TalAloni/SMBLibrary?tab=readme-ov-file#licensing).

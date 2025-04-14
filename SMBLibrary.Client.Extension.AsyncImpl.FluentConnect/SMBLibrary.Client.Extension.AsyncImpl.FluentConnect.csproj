@@ -7,7 +7,7 @@
     <Version>0.5.4</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Authors>lazyzu</Authors>
-    <PackageDescription>Wrapper library of SMBLibrary for asynchronous access SMB resource easier</PackageDescription>
+    <PackageDescription>SMB access interface similar to System.IO based on SMBLibrary.Client.Extension.AsyncImpl</PackageDescription>
     <PackageProjectUrl>https://github.com/lazyzu/SMBLibrary.Client.Extension</PackageProjectUrl>
   </PropertyGroup>
 
