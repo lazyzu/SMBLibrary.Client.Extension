@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <PackageReference Include="TUnit" Version="0.13.18" />
-    <PackageReference Include="ClosedXML" Version="0.102.3" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework) != 'net461'">

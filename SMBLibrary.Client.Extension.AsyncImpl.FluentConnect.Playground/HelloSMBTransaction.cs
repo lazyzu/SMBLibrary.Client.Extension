@@ -1,5 +1,4 @@
-﻿using ClosedXML.Excel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,27 +26,26 @@ namespace SMBLibrary.Client.Extension.AsyncImpl.FluentConnect.Playground
 
                 await using (var transaction = await connectionSettingGetter.NewTransaction<SMBSimpleTransaction>(sampleFolderPath, afterConnectInitial: _tran => _tran.InitialHandles(), cancellationToken))
                 {
-                    var workbookDestination = sampleFolderPath.GetRelative("SMBStreamAsync.xlsx").Value;
+                    var sampleFilePath = sampleFolderPath.GetRelative("SMBStream.txt").Value;
 
-                    await using (var fileStream = (await transaction.FileHandle.Open(workbookDestination
+                    await using (var fileStream = (await transaction.FileHandle.Open(sampleFilePath
                         , SMBLibrary.CreateDisposition.FILE_OVERWRITE_IF
                         , SMBLibrary.AccessMask.GENERIC_READ | SMBLibrary.AccessMask.GENERIC_WRITE | SMBLibrary.AccessMask.SYNCHRONIZE
                         , SMBLibrary.ShareAccess.None)).Value)
-                    using (var workbook = new XLWorkbook())
+                    using (var streamWriter = new StreamWriter(fileStream))
                     {
-                        var sheet = workbook.AddWorksheet("Test");
-                        sheet.Cell(1, 1).Value = 123;
-                        workbook.SaveAs(fileStream);
+                        streamWriter.WriteLine("Hello World");
+                        streamWriter.WriteLine("Hello Stream");
                     }
 
-                    await using (var fileStream = (await transaction.FileHandle.Open(workbookDestination
+                    await using (var fileStream = (await transaction.FileHandle.Open(sampleFilePath
                         , SMBLibrary.CreateDisposition.FILE_OPEN
                         , SMBLibrary.AccessMask.GENERIC_READ | SMBLibrary.AccessMask.SYNCHRONIZE
                         , SMBLibrary.ShareAccess.None)).Value)
-                    using (var workbook = new XLWorkbook(fileStream))
+                    using (var streamReader = new StreamReader(fileStream))
                     {
-                        var sheet = workbook.Worksheet("Test");
-                        await Assert.That(sheet.Cell(1, 1).Value).IsEqualTo(123);
+                        await Assert.That(streamReader.ReadLine()).IsEqualTo("Hello World");
+                        await Assert.That(streamReader.ReadLine()).IsEqualTo("Hello Stream");
                     }
                 }
             }

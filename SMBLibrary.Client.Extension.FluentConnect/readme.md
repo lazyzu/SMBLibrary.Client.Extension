@@ -236,3 +236,7 @@ public void SMBClientFactory_TryConnect()
     else Assert.Fail(error.Message);
 }
 ```
+
+Licensing:
+=================
+`SMBLibrary.Client.Extension.FluentConnect` can be used in any scenario without any cost. However, please note the [commercial usage restrictions of the underlying SMBLibrary](https://github.com/TalAloni/SMBLibrary?tab=readme-ov-file#licensing).
